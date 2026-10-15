@@ -1,4 +1,5 @@
 'use client';
+import { contractorNav } from './nav';
 import { useEffect, useState } from 'react';
 import RoleShell, { LightBanner } from '../../components/RoleShell';
 import { api } from '../../lib/api';
@@ -6,16 +7,6 @@ import { pill } from '../../components/ops';
 import { LayoutDashboard, FileText, Users, CalendarCheck, Receipt, FolderCheck, BarChart3, Bell, Users as UsersIcon, ShieldCheck, IndianRupee, UserPlus, Upload, FilePlus, FolderUp, IdCard, LineChart as ChartIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
-export const contractorNav = [
-  { href: '/contractor', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/contractor/contracts', label: 'My Contracts', icon: FileText },
-  { href: '/contractor/workers', label: 'Workers & Manpower', icon: Users },
-  { href: '/contractor/attendance', label: 'Attendance & Access', icon: CalendarCheck },
-  { href: '/contractor/bills', label: 'Bills & Transactions', icon: Receipt },
-  { href: '/contractor/documents', label: 'Documents & Compliance', icon: FolderCheck },
-  { href: '/contractor/reports', label: 'Reports', icon: BarChart3 },
-  { href: '/contractor/notifications', label: 'Notifications', icon: Bell },
-];
 
 const DCOLORS = ['#2563eb', '#06b6d4', '#8b5cf6', '#94a3b8'];
 

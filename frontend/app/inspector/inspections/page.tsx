@@ -1,9 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
-import RoleShell, { LightBanner } from '../../components/RoleShell';
-import { inspectorNav } from '../page';
-import { api } from '../../lib/api';
-import { pill } from '../../components/ops';
+import RoleShell, { LightBanner } from '../../../components/RoleShell';
+import { inspectorNav } from '../nav';
+import { api } from '../../../lib/api';
+import { pill } from '../../../components/ops';
 
 export default function MyInspections() {
   const [items, setItems] = useState<any[]>([]); const [msg, setMsg] = useState(''); const [loading, setLoading] = useState(true);

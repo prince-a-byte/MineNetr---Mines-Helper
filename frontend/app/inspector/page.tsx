@@ -1,27 +1,12 @@
 'use client';
+import { inspectorNav } from './nav';
 import { useEffect, useState } from 'react';
 import RoleShell, { DarkBanner } from '../../components/RoleShell';
 import { api } from '../../lib/api';
 import { pill } from '../../components/ops';
-import { LayoutDashboard, ClipboardList, CalendarDays, ListChecks, TriangleAlert, Camera, Leaf, Truck, Users, BarChart3, ShieldCheck, MessagesSquare, FolderClosed, Settings, ClipboardCheck, ListVideo, ScanLine, Database, FilePlus, Siren } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, CalendarDays, ListChecks, TriangleAlert, Camera, Leaf, Truck, Users, BarChart3, ShieldCheck, MessagesSquare, FolderClosed, Settings, ClipboardCheck, ListVideo, ScanLine, Database, FilePlus, Siren, Bell } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
-export const inspectorNav = [
-  { href: '/inspector', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/inspector/inspections', label: 'My Inspections', icon: ClipboardList },
-  { href: '/inspector/schedule', label: 'Inspection Schedule', icon: CalendarDays },
-  { href: '/inspector/checklists', label: 'Checklists & Forms', icon: ListChecks },
-  { href: '/inspector/findings', label: 'Findings & Observations', icon: TriangleAlert },
-  { href: '/inspector/evidence', label: 'Photos & Evidence', icon: Camera },
-  { href: '/inspector/safety', label: 'Safety & Environment', icon: Leaf },
-  { href: '/inspector/production', label: 'Production & Dispatch', icon: Truck },
-  { href: '/inspector/workers', label: 'Workers & Contractor', icon: Users },
-  { href: '/inspector/reports', label: 'Reports', icon: BarChart3 },
-  { href: '/inspector/compliance', label: 'Compliance Status', icon: ShieldCheck },
-  { href: '/inspector/communications', label: 'Communications', icon: MessagesSquare },
-  { href: '/inspector/documents', label: 'Documents', icon: FolderClosed },
-  { href: '/inspector/settings', label: 'Settings', icon: Settings },
-];
 
 const envTrend = [
   { h: '12 AM', m: 30, d: 55, c: 20 }, { h: '4 AM', m: 38, d: 62, c: 26 }, { h: '8 AM', m: 45, d: 70, c: 32 },

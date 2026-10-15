@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
-import RoleShell, { LightBanner } from '../../components/RoleShell';
-import { inspectorNav } from '../page';
-import { FindingsTable, FindingForm } from '../../components/ops';
+import RoleShell, { LightBanner } from '../../../components/RoleShell';
+import { inspectorNav } from '../nav';
+import { FindingsTable, FindingForm } from '../../../components/ops';
 
 export default function FindingsPage() {
   const [k, setK] = useState(0);

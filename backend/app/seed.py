@@ -137,6 +137,16 @@ def seed(db: Session):
         for n in NOTIFS:
             db.add(models.Notification(role=n[0], title=n[1], subtitle=n[2], severity=n[3], time_ago=n[4]))
         out["backfilled"].append("notifications")
+    else:
+        # upsert any missing demo notifications (e.g. new roles added later)
+        have = {(n.role, n.title) for n in db.query(models.Notification).all()}
+        added = 0
+        for n in NOTIFS:
+            if (n[0], n[1]) not in have:
+                db.add(models.Notification(role=n[0], title=n[1], subtitle=n[2], severity=n[3], time_ago=n[4]))
+                added += 1
+        if added:
+            out["backfilled"].append(f"notifications:+{added}")
     if db.query(models.Worker).count() == 0:
         for w in WORKERS:
             db.add(models.Worker(worker_id=w[0], name=w[1], contractor=w[2], contractor_id=w[3],
