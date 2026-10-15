@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body { font-family: Inter, system-ui, sans-serif; background: #f1f5f9; }
+.card { @apply bg-white rounded-2xl shadow-sm border border-slate-100 p-5; }
+.kpi-icon { @apply w-12 h-12 rounded-xl flex items-center justify-center shrink-0; }
+.navlink { @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-slate-300 hover:bg-white/10 hover:text-white text-[14px] font-medium transition; }
+.navlink-active { @apply bg-blue-600 text-white shadow-lg shadow-blue-900/40; }
+.input { @apply w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white; }
+.btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl px-5 py-2.5 text-sm transition disabled:opacity-50; }
+.badge { @apply inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full; }
+table.dense th { @apply text-left text-[12px] uppercase tracking-wide text-indigo-900 font-bold py-2.5 px-3 bg-indigo-50/60; }
+table.dense td { @apply text-[13px] text-slate-700 py-2.5 px-3 border-t border-slate-100; }
