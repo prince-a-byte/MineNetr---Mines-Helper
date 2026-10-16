@@ -1,0 +1,17 @@
+/* Shared skeleton primitives. Restrained shimmer, reduced-motion aware. */
+.skel {
+  border-radius: 8px;
+  background: linear-gradient(100deg, #e8eef6 30%, #f4f8fc 48%, #e8eef6 66%);
+  background-size: 220% 100%;
+  animation: mnr-shimmer 1.5s ease-in-out infinite;
+  min-height: 12px;
+}
+
+@keyframes mnr-shimmer {
+  0% { background-position: 120% 0; }
+  100% { background-position: -120% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skel { animation: none; background: #e8eef6; }
+}

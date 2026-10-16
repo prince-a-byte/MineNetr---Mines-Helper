@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
+import TableSkeleton from './ui/TableSkeleton';
+import InlineLoader from './ui/InlineLoader';
 
 export function useList(path: string, params: any) {
   const [data, setData] = useState<any>(null); const [loading, setLoading] = useState(true); const [err, setErr] = useState('');
@@ -28,15 +30,28 @@ export function SearchBar({ value, setValue, onSearch, ph }: any) {
   </div>);
 }
 
+/** Error block with retry — loading states must never trap the user. */
+export function LoadError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="py-8 text-center" role="alert">
+      <div className="text-sm text-red-600">Couldn&apos;t load data: {message}</div>
+      <button className="btn-primary mt-3 !py-2" onClick={onRetry}>Retry</button>
+    </div>
+  );
+}
+
 export function WorkersTable({ canAdd }: { canAdd?: boolean }) {
   const [q, setQ] = useState(''); const [qq, setQq] = useState(''); const [page, setPage] = useState(1);
   const [name, setName] = useState(''); const [mine, setMine] = useState('BCM-03'); const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
   const { data, loading, err, reload } = useList('/api/v1/workers', { q: qq, page, size: 10 });
   async function add() {
-    setMsg('');
+    if (busy) return;
+    setMsg(''); setBusy(true);
     try { const r = await api('/api/v1/workers', { method: 'POST', body: JSON.stringify({ name, mine_code: mine }) });
       setMsg(`Worker ${r.worker_id} registered.`); setName(''); reload(); }
     catch (e: any) { setMsg(e.message); }
+    finally { setBusy(false); }
   }
   return (<div className="card">
     {msg && <div className="mb-2 text-[13px] bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-3 py-2">{msg}</div>}
@@ -45,11 +60,13 @@ export function WorkersTable({ canAdd }: { canAdd?: boolean }) {
       <select className="input !w-44" value={mine} onChange={e => setMine(e.target.value)}>
         {['BCM-01','BCM-02','BCM-03','BCM-04','BCM-05','BCM-06','BCM-07','BCM-08','BCM-09','BCM-11','BCM-12'].map(m => <option key={m}>{m}</option>)}
       </select>
-      <button className="btn-primary" onClick={add}>Add Worker</button>
+      <button className="btn-primary" onClick={add} disabled={busy}>
+        {busy ? <InlineLoader label="Adding…" light /> : 'Add Worker'}
+      </button>
     </div>)}
     <SearchBar value={q} setValue={setQ} onSearch={() => (setQq(q), setPage(1))} ph="Search by worker name or ID…" />
-    {loading ? <div className="text-sm text-slate-500 py-8 text-center">Loading workers…</div> :
-     err ? <div className="text-sm text-red-600">Error: {err}</div> :
+    {loading ? <TableSkeleton columns={['Worker ID','Name','Contractor','Mine','State','Work Type','Compliance','Training Valid Till']} /> :
+     err ? <LoadError message={err} onRetry={reload} /> :
     <div className="overflow-x-auto"><table className="dense w-full min-w-[860px]">
       <thead><tr><th>Worker ID</th><th>Name</th><th>Contractor</th><th>Mine</th><th>State</th><th>Work Type</th><th>Compliance</th><th>Training Valid Till</th></tr></thead>
       <tbody>{data?.items?.map((w: any) => (
@@ -61,17 +78,20 @@ export function WorkersTable({ canAdd }: { canAdd?: boolean }) {
 
 export function ContractsTable({ allowRenewal }: { allowRenewal?: boolean }) {
   const [q, setQ] = useState(''); const [qq, setQq] = useState(''); const [msg, setMsg] = useState('');
+  const [busyId, setBusyId] = useState('');
   const { data, loading, err, reload } = useList('/api/v1/contracts', { q: qq, page: 1, size: 20 });
   async function renew(id: string) {
-    setMsg('');
+    if (busyId) return;
+    setMsg(''); setBusyId(id);
     try { await api(`/api/v1/contracts/${id}/renewal-request`, { method: 'POST' }); setMsg(`${id}: renewal requested.`); reload(); }
     catch (e: any) { setMsg(e.message); }
+    finally { setBusyId(''); }
   }
   return (<div className="card">
     {msg && <div className="mb-2 text-[13px] bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-3 py-2">{msg}</div>}
     <SearchBar value={q} setValue={setQ} onSearch={() => setQq(q)} ph="Search contracts…" />
-    {loading ? <div className="text-sm text-slate-500 py-8 text-center">Loading contracts…</div> :
-     err ? <div className="text-sm text-red-600">Error: {err}</div> :
+    {loading ? <TableSkeleton columns={['Contract','Mine','Period','Value','Status']} rows={4} /> :
+     err ? <LoadError message={err} onRetry={reload} /> :
     <div className="grid gap-3">{data?.items?.map((c: any) => (
       <div key={c.id} className="border rounded-2xl p-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -84,7 +104,11 @@ export function ContractsTable({ allowRenewal }: { allowRenewal?: boolean }) {
           <span>Period: <b className="text-navy">{c.start} → {c.end}</b></span>
           <span>Value: <b className="text-navy">₹ {c.value_lakh} Lakh</b></span>
           <span>Progress: <b className="text-navy">{c.progress}%</b></span>
-          {allowRenewal && c.status !== 'Pending Renewal' && <button className="text-blue-700 font-bold underline" onClick={() => renew(c.id)}>Request Renewal</button>}
+          {allowRenewal && c.status !== 'Pending Renewal' && (
+            <button className="text-blue-700 font-bold underline disabled:opacity-50" disabled={!!busyId} onClick={() => renew(c.id)}>
+              {busyId === c.id ? 'Requesting…' : 'Request Renewal'}
+            </button>
+          )}
         </div>
       </div>))}</div>}
   </div>);
@@ -92,19 +116,24 @@ export function ContractsTable({ allowRenewal }: { allowRenewal?: boolean }) {
 
 export function BillsManager({ canDecide, canSubmit }: { canDecide?: boolean; canSubmit?: boolean }) {
   const [st, setSt] = useState('All'); const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false); const [busyId, setBusyId] = useState('');
   const [cid, setCid] = useState('CT-002'); const [period, setPeriod] = useState('Oct 2026'); const [amt, setAmt] = useState('5.0');
   const { data, loading, err, reload } = useList('/api/v1/bills', { status: st, page: 1, size: 20 });
   async function decide(id: string, decision: string) {
-    setMsg('');
+    if (busyId) return;
+    setMsg(''); setBusyId(id);
     try { await api(`/api/v1/bills/${id}`, { method: 'PATCH', body: JSON.stringify({ decision, remarks: `${decision} in MineNetr demo review` }) });
       setMsg(`${id}: ${decision}.`); reload(); }
     catch (e: any) { setMsg(e.message); }
+    finally { setBusyId(''); }
   }
   async function submit() {
-    setMsg('');
+    if (busy) return;
+    setMsg(''); setBusy(true);
     try { const r = await api('/api/v1/bills', { method: 'POST', body: JSON.stringify({ contract_id: cid, period, amount_lakh: parseFloat(amt) }) });
       setMsg(`Bill ${r.bill_id} submitted → Pending Approval.`); reload(); }
     catch (e: any) { setMsg(e.message); }
+    finally { setBusy(false); }
   }
   return (<div className="space-y-3">
     {msg && <div className="text-[13px] bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-3 py-2">{msg}</div>}
@@ -116,7 +145,9 @@ export function BillsManager({ canDecide, canSubmit }: { canDecide?: boolean; ca
         </select>
         <input className="input !w-40" value={period} onChange={e => setPeriod(e.target.value)} placeholder="Period (e.g. Oct 2026)" />
         <input className="input !w-36" value={amt} onChange={e => setAmt(e.target.value)} placeholder="₹ Lakh" type="number" min="0.1" step="0.1" />
-        <button className="btn-primary" onClick={submit}>Review &amp; Submit</button>
+        <button className="btn-primary" onClick={submit} disabled={busy}>
+          {busy ? <InlineLoader label="Submitting bill…" light /> : <>Review &amp; Submit</>}
+        </button>
       </div>
       <div className="text-[11px] text-slate-500 mt-1">Approval and payment are distinct: submitted bills enter Pending Approval; only Mine Operator / DGMS can approve.</div>
     </div>)}
@@ -126,16 +157,16 @@ export function BillsManager({ canDecide, canSubmit }: { canDecide?: boolean; ca
           {['All','Draft','Pending Approval','Approved','Rejected','Paid'].map(s => <option key={s}>{s}</option>)}
         </select>
       </div>
-      {loading ? <div className="text-sm text-slate-500 py-8 text-center">Loading bills…</div> :
-       err ? <div className="text-sm text-red-600">Error: {err}</div> :
+      {loading ? <TableSkeleton columns={['Bill ID','Contract','Mine','Period','Amount','Status','Submitted']} /> :
+       err ? <LoadError message={err} onRetry={reload} /> :
       <div className="overflow-x-auto"><table className="dense w-full min-w-[820px]">
         <thead><tr><th>Bill ID</th><th>Contract</th><th>Mine</th><th>Period</th><th>Amount</th><th>Status</th><th>Submitted</th>{canDecide && <th>Decision</th>}</tr></thead>
         <tbody>{data?.items?.map((b: any) => (
           <tr key={b.id}><td className="font-bold text-navy">{b.id}</td><td>{b.contract}</td><td>{b.mine}</td>
           <td>{b.period}</td><td className="font-bold">₹ {b.amount_lakh} L</td><td>{pill(b.status)}</td><td>{b.submitted}</td>
           {canDecide && <td><div className="flex gap-1">
-            <button className="text-[12px] font-bold text-green-700 border border-green-300 rounded-lg px-2 py-1" onClick={() => decide(b.id, 'Approved')}>Approve</button>
-            <button className="text-[12px] font-bold text-red-600 border border-red-300 rounded-lg px-2 py-1" onClick={() => { if (confirm(`Reject ${b.id}?`)) decide(b.id, 'Rejected'); }}>Reject</button>
+            <button className="text-[12px] font-bold text-green-700 border border-green-300 rounded-lg px-2 py-1 disabled:opacity-50" disabled={!!busyId} onClick={() => decide(b.id, 'Approved')}>{busyId === b.id ? '…' : 'Approve'}</button>
+            <button className="text-[12px] font-bold text-red-600 border border-red-300 rounded-lg px-2 py-1 disabled:opacity-50" disabled={!!busyId} onClick={() => { if (confirm(`Reject ${b.id}?`)) decide(b.id, 'Rejected'); }}>Reject</button>
           </div></td>}</tr>))}</tbody>
       </table></div>}
     </div>
@@ -147,8 +178,8 @@ export function InspectionsTable() {
   const { data, loading, err } = useList('/api/v1/inspections', { q: qq, page: 1, size: 20 });
   return (<div className="card">
     <SearchBar value={q} setValue={setQ} onSearch={() => setQq(q)} ph="Search inspections…" />
-    {loading ? <div className="text-sm text-slate-500 py-8 text-center">Loading…</div> :
-     err ? <div className="text-sm text-red-600">Error: {err}</div> :
+    {loading ? <TableSkeleton columns={['Inspection ID','Mine','State','Inspector','Date','Type','Status','Report']} /> :
+     err ? <LoadError message={err} onRetry={() => setQq(q)} /> :
     <div className="overflow-x-auto"><table className="dense w-full min-w-[860px]">
       <thead><tr><th>Inspection ID</th><th>Mine</th><th>State</th><th>Inspector</th><th>Date</th><th>Type</th><th>Status</th><th>Report</th></tr></thead>
       <tbody>{data?.items?.map((r: any) => (
@@ -163,8 +194,8 @@ export function FindingsTable() {
   const { data, loading, err } = useList('/api/v1/findings', { q: qq, page: 1, size: 20 });
   return (<div className="card">
     <SearchBar value={q} setValue={setQ} onSearch={() => setQq(q)} ph="Search findings…" />
-    {loading ? <div className="text-sm text-slate-500 py-8 text-center">Loading…</div> :
-     err ? <div className="text-sm text-red-600">Error: {err}</div> :
+    {loading ? <TableSkeleton columns={['Finding ID','Mine','Category','Severity','Status','Source','Date']} /> :
+     err ? <LoadError message={err} onRetry={() => setQq(q)} /> :
     <div className="overflow-x-auto"><table className="dense w-full min-w-[820px]">
       <thead><tr><th>Finding ID</th><th>Mine</th><th>Category</th><th>Severity</th><th>Status</th><th>Source</th><th>Date</th></tr></thead>
       <tbody>{data?.items?.map((f: any) => (
@@ -178,11 +209,14 @@ export function FindingForm({ onDone }: { onDone?: () => void }) {
   const [mine, setMine] = useState('BCM-03'); const [cat, setCat] = useState('Safety (PPE)');
   const [sev, setSev] = useState('Medium'); const [desc, setDesc] = useState(''); const [loc, setLoc] = useState('');
   const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
   async function submit() {
-    setMsg('');
+    if (busy || !desc.trim()) return;
+    setMsg(''); setBusy(true);
     try { const r = await api('/api/v1/findings', { method: 'POST', body: JSON.stringify({ mine_code: mine, category: cat, severity: sev, description: desc, location: loc }) });
       setMsg(`Finding ${r.finding_id} recorded and routed for corrective action.`); setDesc(''); setLoc(''); onDone && onDone(); }
     catch (e: any) { setMsg(e.message); }
+    finally { setBusy(false); }
   }
   return (<div className="card">
     <div className="font-extrabold text-navy mb-2">Record a Finding</div>
@@ -194,7 +228,9 @@ export function FindingForm({ onDone }: { onDone?: () => void }) {
     </div>
     <input className="input mt-2" placeholder="Location / zone (e.g. Pit Area - Loading Point L3)" value={loc} onChange={e => setLoc(e.target.value)} />
     <textarea className="input mt-2" rows={3} placeholder="Observation details…" value={desc} onChange={e => setDesc(e.target.value)} />
-    <button className="btn-primary mt-2" onClick={submit}>Save Finding</button>
+    <button className="btn-primary mt-2" onClick={submit} disabled={busy}>
+      {busy ? <InlineLoader label="Saving…" light /> : 'Save Finding'}
+    </button>
   </div>);
 }
 

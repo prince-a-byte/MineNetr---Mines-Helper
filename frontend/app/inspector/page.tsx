@@ -3,7 +3,9 @@ import { inspectorNav } from './nav';
 import { useEffect, useState } from 'react';
 import RoleShell, { DarkBanner } from '../../components/RoleShell';
 import { api } from '../../lib/api';
-import { pill } from '../../components/ops';
+import { pill, LoadError } from '../../components/ops';
+import MetricCardSkeleton from '../../components/ui/MetricCardSkeleton';
+import ChartSkeleton from '../../components/ui/ChartSkeleton';
 import { LayoutDashboard, ClipboardList, CalendarDays, ListChecks, TriangleAlert, Camera, Leaf, Truck, Users, BarChart3, ShieldCheck, MessagesSquare, FolderClosed, Settings, ClipboardCheck, ListVideo, ScanLine, Database, FilePlus, Siren, Bell } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
@@ -43,8 +45,17 @@ export default function InspectorDashboard() {
               <span className="text-xl">{i}</span><span><b>{a}</b><br /><span className="text-slate-300">{b}</span></span></div>))}
         </div>
       </DarkBanner>}>
-      {err ? <div className="card text-sm text-red-600">Backend unreachable: {err}</div> :
-       !d ? <div className="card text-sm text-slate-500">Loading inspection workspace…</div> : <>
+      {err ? <div className="card"><LoadError message={err} onRetry={() => window.location.reload()} /></div> :
+       !d ? <>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3" aria-label="Loading inspection workspace">
+          {[0,1,2,3,4,5].map(i => <MetricCardSkeleton key={i} />)}
+        </div>
+        <div className="grid xl:grid-cols-3 gap-3 mt-3">
+          <div className="card"><ChartSkeleton height={170} bars={3} /></div>
+          <div className="card"><ChartSkeleton height={170} /></div>
+          <div className="card"><ChartSkeleton height={170} bars={5} /></div>
+        </div>
+      </> : <>
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
         {d.kpis.map((k: any, i: number) => (
           <div key={k.label} className="card !p-3.5 flex gap-2.5 items-start">

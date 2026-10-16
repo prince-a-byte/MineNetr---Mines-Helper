@@ -2,6 +2,9 @@
 import { useEffect, useState } from 'react';
 import Shell from '../../components/Shell';
 import { api } from '../../lib/api';
+import TableSkeleton from '../../components/ui/TableSkeleton';
+import InlineLoader from '../../components/ui/InlineLoader';
+import { LoadError } from '../../components/ops';
 
 function useList(path: string, params: any) {
   const [data, setData] = useState<any>(null); const [loading, setLoading] = useState(true); const [err, setErr] = useState('');
@@ -21,7 +24,7 @@ const pill = (v: string) => {
 
 export function RegistryPage() {
   const [q, setQ] = useState(''); const [qq, setQq] = useState(''); const [page, setPage] = useState(1);
-  const { data, loading, err } = useList('/api/v1/mines', { q: qq, page, size: 10 });
+  const { data, loading, err, reload } = useList('/api/v1/mines', { q: qq, page, size: 10 });
   return (<Shell title="Mine Registry" subtitle="View and manage all registered mines across India.">
     <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 mb-3">
       {[['Total Registered Mines','213','+2%'],['Active Mines','182','+4%'],['Under Inspection','18','-2%'],['High Risk Mines','13','No Change'],['Inactive / Closed','8','-1%']].map(([l,v,d]) => (
@@ -33,8 +36,8 @@ export function RegistryPage() {
         <button className="btn-primary" onClick={() => (setQq(q), setPage(1))}>Search</button>
         <button className="btn-primary !bg-white !text-blue-700 border border-blue-600" onClick={() => (setQ(''), setQq(''), setPage(1))}>Reset</button>
       </div>
-      {loading ? <div className="text-sm text-slate-500 py-8 text-center">Loading mines…</div> :
-       err ? <div className="text-sm text-red-600 py-8 text-center">Error: {err}</div> :
+      {loading ? <TableSkeleton columns={['#','Mine Code','Mine Name','State','District','Operator','Status','Risk Level','Last Inspection','Actions']} /> :
+       err ? <LoadError message={err} onRetry={reload} /> :
       <div className="overflow-x-auto"><table className="dense w-full min-w-[900px]">
         <thead><tr><th>#</th><th>Mine Code</th><th>Mine Name</th><th>State</th><th>District</th><th>Operator</th><th>Status</th><th>Risk Level</th><th>Last Inspection</th><th>Actions</th></tr></thead>
         <tbody>{data?.items?.map((m: any, i: number) => (
@@ -52,7 +55,7 @@ export function RegistryPage() {
 
 export function InspectionsPage() {
   const [q, setQ] = useState(''); const [qq, setQq] = useState(''); const [page, setPage] = useState(1);
-  const { data, loading, err } = useList('/api/v1/inspections', { q: qq, page, size: 10 });
+  const { data, loading, err, reload } = useList('/api/v1/inspections', { q: qq, page, size: 10 });
   return (<Shell title="Inspection Oversight" subtitle="Monitor inspection planning, progress, reports and compliance across all mines.">
     <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 mb-3">
       {[['Total Inspections','214','Scheduled in period'],['Completed','158','73.8% completion rate'],['In Progress','28','Under inspection'],['Overdue','20','Require attention'],['Reports Pending Review','18','Submitted by inspectors']].map(([l,v,d]) => (
@@ -61,8 +64,8 @@ export function InspectionsPage() {
     <div className="card">
       <div className="flex gap-2 mb-3"><input className="input !w-80" placeholder="Search by mine, inspector or report ID…" value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key==='Enter' && (setQq(q), setPage(1))}/>
       <button className="btn-primary" onClick={() => (setQq(q), setPage(1))}>Search</button></div>
-      {loading ? <div className="text-sm text-slate-500 py-8 text-center">Loading inspections…</div> :
-       err ? <div className="text-sm text-red-600">Error: {err}</div> :
+      {loading ? <TableSkeleton columns={['#','Inspection ID','Mine Name','State','Inspector','Scheduled Date','Type','Status','Report','Actions']} /> :
+       err ? <LoadError message={err} onRetry={reload} /> :
       <div className="overflow-x-auto"><table className="dense w-full min-w-[1000px]">
         <thead><tr><th>#</th><th>Inspection ID</th><th>Mine Name</th><th>State</th><th>Inspector</th><th>Scheduled Date</th><th>Type</th><th>Status</th><th>Report</th><th>Actions</th></tr></thead>
         <tbody>{data?.items?.map((r: any, i: number) => (
@@ -77,12 +80,15 @@ export function InspectionsPage() {
 export function FindingsPage() {
   const [q, setQ] = useState(''); const [qq, setQq] = useState(''); const [sev, setSev] = useState(''); const [page, setPage] = useState(1);
   const [sel, setSel] = useState<any>(null); const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
   const { data, loading, err, reload } = useList('/api/v1/findings', { q: qq, severity: sev, page, size: 10 });
   async function resolve(f: any) {
-    setMsg('');
+    if (busy) return;
+    setMsg(''); setBusy(true);
     try { await api(`/api/v1/findings/${f.finding_id}`, { method: 'PATCH', body: JSON.stringify({ status: 'Resolved', ai_verified: true }) });
       setMsg(`${f.finding_id} marked Resolved (human-verified).`); reload(); }
     catch (e: any) { setMsg(e.message); }
+    finally { setBusy(false); }
   }
   return (<Shell title="Findings & Violations" subtitle="Monitor inspection findings, AI-detected observations and violations across all mines.">
     <div className="grid grid-cols-2 xl:grid-cols-5 gap-3 mb-3">
@@ -98,8 +104,8 @@ export function FindingsPage() {
             <option value="">All Severities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select>
           <button className="btn-primary" onClick={() => (setQq(q), setPage(1))}>Search</button>
         </div>
-        {loading ? <div className="text-sm text-slate-500 py-8 text-center">Loading findings…</div> :
-         err ? <div className="text-sm text-red-600">Error: {err}</div> :
+        {loading ? <TableSkeleton columns={['Finding ID','Mine','Category','Severity','Status','Source','Actions']} /> :
+         err ? <LoadError message={err} onRetry={reload} /> :
         <div className="overflow-x-auto"><table className="dense w-full min-w-[860px]">
           <thead><tr><th>Finding ID</th><th>Mine</th><th>Category</th><th>Severity</th><th>Status</th><th>Source</th><th>Actions</th></tr></thead>
           <tbody>{data?.items?.map((f: any) => (
@@ -119,7 +125,9 @@ export function FindingsPage() {
             <div><b>Location:</b> {sel.location}</div>
             <div><b>Source:</b> {sel.source}{sel.ai_conf ? ` · conf ${(sel.ai_conf*100).toFixed(0)}%` : ''}</div>
             <div><b>Assigned:</b> {sel.assigned} · <b>Target:</b> {sel.target}</div>
-            <button onClick={() => resolve(sel)} className="btn-primary w-full mt-2">Mark as Resolved (verify)</button>
+            <button onClick={() => resolve(sel)} className="btn-primary w-full mt-2" disabled={busy}>
+              {busy ? <InlineLoader label="Verifying…" light /> : 'Mark as Resolved (verify)'}
+            </button>
           </div>)}
       </div>
     </div>

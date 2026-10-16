@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Factory, HardHat, ShieldCheck, ClipboardCheck, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Factory, HardHat, ShieldCheck, ClipboardCheck, Eye, EyeOff } from 'lucide-react';
 import { API, roleHome } from '../../lib/api';
+import InlineLoader from '../../components/ui/InlineLoader';
 
 const ROLES = [
   { id: 'operator', name: 'Mine Operator', desc: 'Manage mine operations, production, workforce and safety.', icon: Factory },
@@ -126,7 +127,7 @@ export default function LoginPage() {
             </div>
             {err && <div className="mt-3 text-[13px] bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2">{err}</div>}
             <button disabled={loading} className="btn-primary w-full mt-4 flex items-center justify-center gap-2">
-              {loading && <Loader2 className="animate-spin" size={16}/>} {loading ? 'Signing in…' : `Sign in to ${sel.name} workspace`}
+              {loading ? <InlineLoader label={`Signing in to ${sel.name}…`} light /> : `Sign in to ${sel.name} workspace`}
             </button>
             <div className="mt-3 text-[11px] text-slate-500 bg-amber-50 border border-amber-200 rounded-xl p-2.5">
               <b>Demo accounts (development only):</b><br/>

@@ -3,7 +3,9 @@ import { contractorNav } from './nav';
 import { useEffect, useState } from 'react';
 import RoleShell, { LightBanner } from '../../components/RoleShell';
 import { api } from '../../lib/api';
-import { pill } from '../../components/ops';
+import { pill, LoadError } from '../../components/ops';
+import MetricCardSkeleton from '../../components/ui/MetricCardSkeleton';
+import ChartSkeleton from '../../components/ui/ChartSkeleton';
 import { LayoutDashboard, FileText, Users, CalendarCheck, Receipt, FolderCheck, BarChart3, Bell, Users as UsersIcon, ShieldCheck, IndianRupee, UserPlus, Upload, FilePlus, FolderUp, IdCard, LineChart as ChartIcon } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
@@ -26,8 +28,17 @@ export default function ContractorDashboard() {
     <RoleShell role="contractor" nav={contractorNav} orgTitle="Contractor Workspace" orgSub="ABC Mining Services"
       mineName="Bharat Coal Mine (BCM-01)"
       banner={<LightBanner title={<>Welcome Back, <span className="text-blue-600">{user?.name?.split(' ')[0] || 'Contractor'}!</span></>} sub="Contractor Dashboard — Manage your workforce, contracts, compliance documents and billing for a safer and more transparent mining operation." />}>
-      {err ? <div className="card text-sm text-red-600">Backend unreachable: {err}</div> :
-       !d ? <div className="card text-sm text-slate-500">Loading contractor overview…</div> : <>
+      {err ? <div className="card"><LoadError message={err} onRetry={() => window.location.reload()} /></div> :
+       !d ? <>
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3" aria-label="Loading contractor overview">
+          {[0,1,2,3].map(i => <MetricCardSkeleton key={i} />)}
+        </div>
+        <div className="grid xl:grid-cols-3 gap-3 mt-3">
+          <div className="card"><ChartSkeleton height={190} bars={3} /></div>
+          <div className="card"><ChartSkeleton height={190} /></div>
+          <div className="card"><ChartSkeleton height={190} bars={4} /></div>
+        </div>
+      </> : <>
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
         {d.kpis.map((k: any, i: number) => {
           const I = [UsersIcon, FileText, IndianRupee, ShieldCheck][i];

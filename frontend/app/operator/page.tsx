@@ -5,7 +5,9 @@ import RoleShell, { LightBanner } from '../../components/RoleShell';
 import { api } from '../../lib/api';
 import { LayoutDashboard, Users, HardHat, CalendarCheck, Truck, Warehouse, Receipt, FileCheck, BarChart3, ClipboardCheck, Settings, ShoppingCart, Users as UsersIcon, FileText, ShieldCheck, Plus, Upload, IdCard } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend } from 'recharts';
-import { pill } from '../../components/ops';
+import { pill, LoadError } from '../../components/ops';
+import MetricCardSkeleton from '../../components/ui/MetricCardSkeleton';
+import ChartSkeleton from '../../components/ui/ChartSkeleton';
 
 
 function Gauge({ pct, color }: { pct: number; color: string }) {
@@ -37,8 +39,19 @@ export default function OperatorDashboard() {
     <RoleShell role="operator" nav={operatorNav} orgTitle="Mine Operations" orgSub="Bharat Coking Coal Ltd."
       mineName="Bharat Coal Mine (BCM-03)"
       banner={<LightBanner title={<>Welcome Back, <span className="text-blue-600">{user?.name?.split(' ')[0] || 'Operator'}</span></>} sub="Bharat Coal Mine (BCM-03) — Monitor operations, ensure safety, manage compliance and drive efficient mine operations." />}>
-      {err ? <div className="card text-sm text-red-600">Backend unreachable: {err}</div> :
-       !d ? <div className="card text-sm text-slate-500">Loading operations overview…</div> : <>
+      {err ? <div className="card"><LoadError message={err} onRetry={() => window.location.reload()} /></div> :
+       !d ? <>
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3" aria-label="Loading operations overview">
+          {[0,1,2,3,4].map(i => <MetricCardSkeleton key={i} />)}
+        </div>
+        <div className="grid xl:grid-cols-5 gap-3 mt-3">
+          <div className="card xl:col-span-3"><ChartSkeleton height={190} /></div>
+          <div className="xl:col-span-2 space-y-3">
+            <div className="card"><ChartSkeleton height={150} bars={4} /></div>
+            <div className="card"><ChartSkeleton height={110} bars={4} /></div>
+          </div>
+        </div>
+      </> : <>
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
         {d.kpis.map((k: any, i: number) => { const I = kpiIcon[i];
           return (<div key={k.label} className="card !p-4 flex gap-3 items-start">

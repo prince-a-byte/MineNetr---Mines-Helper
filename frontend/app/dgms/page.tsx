@@ -2,6 +2,9 @@
 import { useEffect, useState } from 'react';
 import Shell from '../../components/Shell';
 import { api } from '../../lib/api';
+import MetricCardSkeleton from '../../components/ui/MetricCardSkeleton';
+import ChartSkeleton from '../../components/ui/ChartSkeleton';
+import { LoadError } from '../../components/ops';
 import { Mountain, ClipboardCheck, TriangleAlert, Clock, FileText } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from 'recharts';
 
@@ -16,8 +19,19 @@ export default function DgmsDashboard() {
     { name: 'Pending', value: data.inspection_status.Pending, color: '#f59e0b' },
     { name: 'Overdue', value: data.inspection_status.Overdue, color: '#ef4444' },
   ] : [];
-  if (err) return (<Shell title="DGMS Dashboard" subtitle="National overview of mining safety, compliance and inspection performance."><div className="card text-red-600 text-sm">Backend unreachable: {err}. Start backend: <code>uvicorn app.main:app --port 8000</code> in /backend.</div></Shell>);
-  if (!data) return (<Shell title="DGMS Dashboard" subtitle="National overview…"><div className="card text-sm text-slate-500">Loading live overview…</div></Shell>);
+  if (err) return (<Shell title="DGMS Dashboard" subtitle="National overview of mining safety, compliance and inspection performance."><div className="card"><LoadError message={err} onRetry={() => window.location.reload()} /></div></Shell>);
+  if (!data) return (
+    <Shell title="DGMS Dashboard" subtitle="National overview of mining safety, compliance and inspection performance.">
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3" aria-label="Loading dashboard metrics">
+        {[0,1,2,3,4].map(i => <MetricCardSkeleton key={i} />)}
+      </div>
+      <div className="grid xl:grid-cols-3 gap-3 mt-3">
+        <div className="card"><ChartSkeleton height={150} bars={4} /></div>
+        <div className="card"><ChartSkeleton height={170} /></div>
+        <div className="card"><ChartSkeleton height={170} bars={5} /></div>
+      </div>
+    </Shell>
+  );
   return (
     <Shell title="DGMS Dashboard" subtitle="National overview of mining safety, compliance and inspection performance.">
       <div className="flex gap-2 mb-3 flex-wrap">

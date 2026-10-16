@@ -1,0 +1,193 @@
+/* "Deep Signal" — MineNetr signature loader. CSS-only motion, SSR-safe.
+   Palette: navy #0B3154 · blue #1463D9 · light #EAF3FF · amber #E8A02B · slate #68788D */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 110%, #12325e 0%, #0b3154 46%, #060f22 100%);
+  animation: mnr-wake 0.45s ease-out both;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.tunnel {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  animation: mnr-contours 0.6s ease-out both;
+}
+
+/* ---------- brand block ---------- */
+.brand {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 24px;
+  text-align: center;
+  animation: mnr-rise 0.5s ease-out 0.15s both;
+}
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, #1463d9 0%, #0b3154 100%);
+  border: 1px solid rgba(94, 160, 255, 0.45);
+  box-shadow: 0 0 28px rgba(20, 99, 217, 0.45);
+}
+
+.name {
+  font-size: 40px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+.nameAccent { color: #5ea0ff; }
+
+.tagline {
+  margin: 10px 0 0;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9db4d0;
+}
+
+.statusRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 26px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #e8a02b;
+  box-shadow: 0 0 10px rgba(232, 160, 43, 0.9);
+  animation: mnr-blink 1.6s ease-in-out infinite;
+}
+
+.status {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #c9d8ea;
+}
+
+/* indeterminate signal track — never claims a percentage */
+.track {
+  position: relative;
+  margin-top: 14px;
+  width: 208px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(94, 160, 255, 0.18);
+  overflow: hidden;
+}
+.bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 34%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(20, 99, 217, 0) 0%, #5ea0ff 55%, rgba(20, 99, 217, 0) 100%);
+  animation: mnr-slide 1.5s ease-in-out infinite;
+}
+
+/* ---------- svg motion ---------- */
+.contours path { animation: mnr-drift 7s ease-in-out infinite alternate; }
+.contours path:nth-child(2) { animation-delay: -2s; }
+.contours path:nth-child(3) { animation-delay: -4s; }
+
+.arch {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  animation: mnr-draw 1.2s ease-out 0.25s forwards;
+}
+
+.sweep { animation: mnr-sweep 3.2s ease-in-out 0.5s infinite; }
+
+.pulse {
+  stroke-dasharray: 90 560;
+  stroke-dashoffset: 650;
+  animation: mnr-pulse 2.4s linear 0.8s infinite;
+  filter: drop-shadow(0 0 5px rgba(94, 160, 255, 0.9));
+}
+
+.node { animation: mnr-node 2.4s ease-in-out infinite; }
+.nodeGlow circle { animation: mnr-node 2.4s ease-in-out infinite; }
+
+/* ---------- inline variants (buttons, rows) ---------- */
+.inlineWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.35;
+  animation: mnr-blink 1.1s ease-in-out infinite;
+}
+.dot:nth-child(2) { animation-delay: 0.18s; }
+.dot:nth-child(3) { animation-delay: 0.36s; }
+.inlineMsg {
+  margin-left: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.compact .dot { width: 5px; height: 5px; }
+
+/* ---------- keyframes ---------- */
+@keyframes mnr-wake { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mnr-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes mnr-contours { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mnr-draw { to { stroke-dashoffset: 0; } }
+@keyframes mnr-drift { from { transform: translateX(-9px); } to { transform: translateX(9px); } }
+@keyframes mnr-sweep {
+  0%, 100% { opacity: 0.12; transform: translateX(-46px); }
+  50% { opacity: 0.8; transform: translateX(46px); }
+}
+@keyframes mnr-pulse { to { stroke-dashoffset: -650; } }
+@keyframes mnr-node {
+  0%, 100% { opacity: 0.55; }
+  12% { opacity: 1; }
+  30% { opacity: 0.7; }
+}
+@keyframes mnr-blink { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+@keyframes mnr-slide {
+  0% { left: -34%; }
+  100% { left: 100%; }
+}
+
+/* ---------- reduced motion: static branded composition ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .stage, .tunnel, .brand { animation: none; }
+  .contours path, .sweep, .pulse, .node, .nodeGlow circle,
+  .dot, .bar, .statusDot { animation: none; }
+  .arch { stroke-dashoffset: 0; }
+  .pulse { stroke-dashoffset: 0; opacity: 0.8; }
+  .bar { left: 33%; }
+  .dot { opacity: 0.8; }
+}
