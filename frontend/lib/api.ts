@@ -1,9 +1,18 @@
 
-const API_BASE_URL =
+const RAW_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "http://localhost:8000/api/v1";
+  "http://localhost:8000";
 
-export const API = API_BASE_URL.replace(/\/$/, "");
+// Normalized origin (no trailing slash, no /api/v1 suffix) so callers can
+// never produce a doubled "/api/v1/api/v1/..." path regardless of how the
+// env var is configured.
+export const API = RAW_BASE.replace(/\/$/, "").replace(/\/api\/v1$/, "");
+
+/** Join a path onto the API, tolerating a leading "/api/v1" if present. */
+export function apiUrl(path: string): string {
+  const p = path.startsWith("/api/v1") ? path : `/api/v1${path.startsWith("/") ? path : `/${path}`}`;
+  return `${API}${p}`;
+}
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -28,7 +37,7 @@ export async function api(
 ) {
   const token = getToken();
 
-  const res = await fetch(`${API}${path}`, {
+  const res = await fetch(apiUrl(path), {
     ...opts,
     headers: {
       "Content-Type": "application/json",

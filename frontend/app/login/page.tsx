@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Factory, HardHat, ShieldCheck, ClipboardCheck, Eye, EyeOff } from 'lucide-react';
-import { API, roleHome } from '../../lib/api';
+import { apiUrl, roleHome } from '../../lib/api';
 import InlineLoader from '../../components/ui/InlineLoader';
 
 const ROLES = [
@@ -39,7 +39,7 @@ export default function LoginPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setErr(''); setLoading(true);
     try {
-      const res = await fetch(`${API}/api/v1/auth/login`, {
+      const res = await fetch(apiUrl('/api/v1/auth/login'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password: pw, role }),
       });
