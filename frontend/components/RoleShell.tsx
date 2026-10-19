@@ -43,7 +43,10 @@ export default function RoleShell({ role, nav, orgTitle, orgSub, banner, mineNam
           <button className="md:hidden ml-auto" onClick={() => setOpen(false)}><X size={18} /></button>
         </div>
         <nav className="px-3 space-y-1 overflow-y-auto flex-1 pb-2">
-          {nav.map(n => { const Icon = n.icon; const active = path === n.href;
+          {nav.map(n => { const Icon = n.icon;
+            // Exact match, or a child route of this item (never the portal root
+            // itself, which would otherwise stay lit on every sub-page).
+            const active = path === n.href || (n.href !== `/${role}` && path.startsWith(`${n.href}/`));
             return (<Link key={n.href} href={n.href} onClick={() => setOpen(false)}
               className={`navlink ${active ? 'navlink-active' : ''}`}><Icon size={18} />{n.label}
               {n.badge ? <span className="ml-auto bg-red-500 text-white text-[10px] w-[18px] h-[18px] rounded-full flex items-center justify-center font-bold">{n.badge}</span> : null}</Link>); })}

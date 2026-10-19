@@ -1,18 +1,20 @@
 'use client';
-import { useState } from 'react';
-import RoleShell, { LightBanner } from '../../../components/RoleShell';
-import { inspectorNav } from '../nav';
-import { FindingsTable, FindingForm } from '../../../components/ops';
+import { InspectorShell } from '../../../components/inspections/ui';
+import { FindingsPage } from '../../../components/inspections/findings';
 
-export default function FindingsPage() {
-  const [k, setK] = useState(0);
+/**
+ * Findings & Observations — shared-data register (reference page 6).
+ * Reads the SAME finding records My Inspections writes to, so a finding raised
+ * during an inspection appears here immediately and a status change here
+ * updates the inspection's open-finding count and the sidebar badge.
+ */
+export default function InspectorFindingsPage() {
   return (
-    <RoleShell role="inspector" nav={inspectorNav} orgTitle="Mine Inspector (DGMS)" orgSub="Directorate General of Mines Safety" mineName="Bharat Coal Mine (BCM-01)"
-      banner={<LightBanner title="Findings & Observations" sub="Record findings with severity, evidence linkage and corrective-action routing." />}>
-      <div className="grid xl:grid-cols-3 gap-3">
-        <div className="xl:col-span-2"><FindingsTable key={k} /></div>
-        <div><FindingForm onDone={() => setK(x => x + 1)} /></div>
-      </div>
-    </RoleShell>
+    <InspectorShell
+      title="Findings & Observations"
+      sub="Record observations with severity, evidence linkage and corrective-action routing — all driven by the shared inspection records."
+    >
+      <FindingsPage />
+    </InspectorShell>
   );
 }

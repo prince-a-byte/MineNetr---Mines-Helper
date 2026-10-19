@@ -8,6 +8,8 @@ body { font-family: Inter, system-ui, sans-serif; background: #f1f5f9; }
 .navlink-active { @apply bg-blue-600 text-white shadow-lg shadow-blue-900/40; }
 .input { @apply w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white; }
 .btn-primary { @apply bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl px-5 py-2.5 text-sm transition disabled:opacity-50; }
+.btn-secondary { @apply border border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50 hover:text-navy font-semibold rounded-xl px-5 py-2.5 text-sm transition disabled:opacity-50; }
+.btn-ghost { @apply text-slate-600 hover:text-navy hover:bg-slate-100 font-semibold rounded-xl px-3 py-2.5 text-sm transition; }
 .badge { @apply inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full; }
 table.dense th { @apply text-left text-[12px] uppercase tracking-wide text-indigo-900 font-bold py-2.5 px-3 bg-indigo-50/60; }
 table.dense td { @apply text-[13px] text-slate-700 py-2.5 px-3 border-t border-slate-100; }
