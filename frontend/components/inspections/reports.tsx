@@ -354,7 +354,7 @@ function ReportViewModal({ reportId, onClose, onError }: {
   const inspection = inspectionOf(db, report.inspectionId);
   const site = siteOfSafe(db, report.mineId);
 
-  function download() {
+  const download = () => {
     try {
       downloadReport(report, {
         mineLabel: siteLabel(db, report.mineId),
@@ -367,7 +367,7 @@ function ReportViewModal({ reportId, onClose, onError }: {
     } catch (e) {
       onError(msg(e));
     }
-  }
+  };
 
   return (
     <Modal title={`${report.id} · ${report.title}`} onClose={onClose} wide>

@@ -1,48 +1,24 @@
 'use client';
-import { useEffect, useState } from 'react';
-import RoleShell, { LightBanner } from '../../../components/RoleShell';
-import { inspectorNav } from '../nav';
-import { api } from '../../../lib/api';
-import { pill, LoadError } from '../../../components/ops';
-import TableSkeleton from '../../../components/ui/TableSkeleton';
-import InlineLoader from '../../../components/ui/InlineLoader';
+import { Suspense } from 'react';
+import { InspectorShell } from '../../../components/inspections/ui';
+import { MyInspectionsPage } from '../../../components/inspections/main';
 
-export default function MyInspections() {
-  const [items, setItems] = useState<any[]>([]); const [msg, setMsg] = useState(''); const [loading, setLoading] = useState(true);
-  const [busyId, setBusyId] = useState('');
-  async function load() {
-    setLoading(true);
-    try { const d = await api('/api/v1/inspections?page=1&size=20'); setItems(d.items || []); setMsg(''); }
-    catch (e: any) { setMsg(e.message); } finally { setLoading(false); }
-  }
-  useEffect(() => { load(); }, []);
-  async function act(id: string, status: string) {
-    if (busyId) return;
-    setMsg(''); setBusyId(id);
-    try { const r = await api(`/api/v1/inspections/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) });
-      setMsg(`${id}: ${status === 'Completed' ? 'submitted → PENDING_OPERATOR review' : 'started'}.`); load(); }
-    catch (e: any) { setMsg(e.message); }
-    finally { setBusyId(''); }
-  }
+/**
+ * My Inspections (reference page 2) — thin wrapper only.
+ *
+ * The page body reads the URL (useSearchParams for ?tab / ?q / ?status / …),
+ * which Next 14 requires to sit inside a Suspense boundary in a client
+ * component, so the shell renders here and the content is suspended.
+ */
+export default function MyInspectionsPageWrapper() {
   return (
-    <RoleShell role="inspector" nav={inspectorNav} orgTitle="Mine Inspector (DGMS)" orgSub="Directorate General of Mines Safety" mineName="Bharat Coal Mine (BCM-01)"
-      banner={<LightBanner title="My Inspections" sub="Assigned inspections — start, continue, save and submit for operator review." />}>
-      {msg && <div className="mb-2 text-[13px] bg-blue-50 border border-blue-200 text-blue-800 rounded-xl px-3 py-2">{msg}</div>}
-      <div className="card">
-        {loading ? <TableSkeleton columns={['Inspection','Mine','Type','Status','Actions']} rows={4} /> :
-        <div className="grid gap-3">{items.map((r: any) => (
-          <div key={r.inspection_id} className="border rounded-2xl p-4 flex flex-wrap items-center gap-2">
-            <div className="flex-1 min-w-[220px]">
-              <div className="font-extrabold text-navy">{r.inspection_id} · {r.mine}</div>
-              <div className="text-[12px] text-slate-500">{r.type} · {r.date} · Inspector: {r.inspector} · Priority: {r.priority}</div>
-            </div>
-            {pill(r.status)}{pill(r.report)}
-            <div className="flex gap-1.5">
-              {r.status !== 'Completed' && <button className="btn-primary !py-1.5" disabled={!!busyId} onClick={() => act(r.inspection_id, 'In Progress')}>{busyId === r.inspection_id ? <InlineLoader label="Starting…" light /> : 'Start / Continue'}</button>}
-              {r.status !== 'Completed' && <button className="btn-primary !py-1.5 !bg-green-600 hover:!bg-green-700" disabled={!!busyId} onClick={() => { if (confirm(`Submit ${r.inspection_id} for operator review?`)) act(r.inspection_id, 'Completed'); }}>{busyId === r.inspection_id ? <InlineLoader label="Submitting…" light /> : 'Submit'}</button>}
-            </div>
-          </div>))}</div>}
-      </div>
-    </RoleShell>
+    <InspectorShell
+      title="My Inspections"
+      sub="View and manage your assigned inspections, track progress, conduct inspections, and submit reports."
+    >
+      <Suspense fallback={null}>
+        <MyInspectionsPage />
+      </Suspense>
+    </InspectorShell>
   );
 }
