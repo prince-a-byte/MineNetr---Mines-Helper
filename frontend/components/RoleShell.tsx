@@ -7,13 +7,16 @@ import { Bell, LogOut, Menu, X, ChevronDown } from 'lucide-react';
 import { getUser, getToken, api } from '../lib/api';
 
 export type NavItem = { href: string; label: string; icon: any; badge?: number };
+export type MineOption = { id: string; label: string };
 
-export default function RoleShell({ role, nav, orgTitle, orgSub, banner, mineName, children }:
-  { role: string; nav: NavItem[]; orgTitle: string; orgSub: string; banner: React.ReactNode; mineName?: string; children: React.ReactNode }) {
+export default function RoleShell({ role, nav, orgTitle, orgSub, banner, mineName, mineOptions, mineValue, onMineChange, profileSub, children }:
+  { role: string; nav: NavItem[]; orgTitle: string; orgSub: string; banner: React.ReactNode; mineName?: string;
+    mineOptions?: MineOption[]; mineValue?: string; onMineChange?: (id: string) => void; profileSub?: string; children: React.ReactNode }) {
   const path = usePathname(); const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [open, setOpen] = useState(false);
   const [notifs, setNotifs] = useState<any[]>([]);
+  const [profileOpen, setProfileOpen] = useState(false);
   useEffect(() => {
     const t = getToken(); const u = getUser();
     if (!t || !u) { router.push('/login'); return; }
@@ -21,6 +24,12 @@ export default function RoleShell({ role, nav, orgTitle, orgSub, banner, mineNam
     setUser(u);
     api('/api/v1/notifications').then(d => setNotifs(d.items || [])).catch(() => {});
   }, []);
+  useEffect(() => {
+    if (!profileOpen) return;
+    const close = () => setProfileOpen(false);
+    window.addEventListener('click', close);
+    return () => window.removeEventListener('click', close);
+  }, [profileOpen]);
   const initials = (user?.name || 'U').split(' ').map((x: string) => x[0]).join('').slice(0, 2).toUpperCase();
   function logout() { localStorage.clear(); router.push('/login'); }
   return (
@@ -45,17 +54,48 @@ export default function RoleShell({ role, nav, orgTitle, orgSub, banner, mineNam
       <div className="flex-1 min-w-0">
         <header className="bg-white border-b px-4 py-2.5 flex items-center gap-3 sticky top-0 z-30">
           <button className="md:hidden" onClick={() => setOpen(true)}><Menu size={20} /></button>
-          {mineName
-            ? <div className="flex items-center gap-2 border rounded-xl px-3 py-1.5 text-sm font-bold text-navy">⛏ {mineName} <ChevronDown size={15} className="text-slate-400" /></div>
-            : <div className="text-sm"><div className="font-extrabold text-navy">{orgTitle}</div>
-              <div className="text-[11px] text-slate-500">{orgSub}</div></div>}
+          {mineOptions
+            ? <div className="relative">
+                <select
+                  aria-label="Select mine"
+                  className="appearance-none flex items-center gap-2 border rounded-xl pl-9 pr-8 py-1.5 text-sm font-bold text-navy bg-white cursor-pointer hover:border-blue-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                  value={mineValue ?? 'ALL'}
+                  onChange={(e) => onMineChange?.(e.target.value)}
+                  style={{ backgroundImage: 'none' }}
+                >
+                  {mineOptions.map(o => <option key={o.id} value={o.id}>{o.label}</option>)}
+                </select>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-navy pointer-events-none">⛏</span>
+                <ChevronDown size={15} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+            : mineName
+              ? <div className="flex items-center gap-2 border rounded-xl px-3 py-1.5 text-sm font-bold text-navy">⛏ {mineName} <ChevronDown size={15} className="text-slate-400" /></div>
+              : <div className="text-sm"><div className="font-extrabold text-navy">{orgTitle}</div>
+                <div className="text-[11px] text-slate-500">{orgSub}</div></div>}
           <div className="ml-auto flex items-center gap-3">
             <Link href={`/${role}/notifications`} className="relative w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-navy"><Bell size={18} />
               {notifs.length ? <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-[18px] h-[18px] rounded-full flex items-center justify-center font-bold">{notifs.length}</span> : null}</Link>
-            <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">{initials}</div>
-            <div className="hidden sm:block"><div className="text-sm font-bold text-navy">{user?.name || ''}</div>
-            <div className="text-[11px] text-slate-500">{user?.title || orgTitle}</div></div>
-            <button onClick={logout} title="Logout" className="text-slate-400 hover:text-red-600"><LogOut size={18} /></button>
+            <div className="relative">
+              <button onClick={(e) => { e.stopPropagation(); setProfileOpen(o => !o); }}
+                className="flex items-center gap-2 rounded-xl pl-1 pr-2 py-1 hover:bg-slate-50" aria-haspopup="menu" aria-expanded={profileOpen}>
+                <span className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-sm">{initials}</span>
+                <span className="hidden sm:block text-left"><span className="block text-sm font-bold text-navy">{user?.name || ''}</span>
+                <span className="block text-[11px] text-slate-500">{profileSub || user?.title || orgTitle}</span></span>
+                <ChevronDown size={15} className={`text-slate-400 transition ${profileOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {profileOpen && (
+                <div role="menu" className="absolute right-0 mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-xl p-1.5 z-50">
+                  <div className="px-3 py-2 border-b border-slate-100 mb-1">
+                    <div className="text-sm font-bold text-navy">{user?.name || ''}</div>
+                    <div className="text-[11px] text-slate-500">{profileSub || user?.title || orgTitle}</div>
+                  </div>
+                  <Link href={`/${role}`} role="menuitem" onClick={() => setProfileOpen(false)}
+                    className="block w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-navy hover:bg-slate-50">Dashboard</Link>
+                  <button role="menuitem" onClick={() => { setProfileOpen(false); logout(); }}
+                    className="w-full text-left px-3 py-2 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 flex items-center gap-2"><LogOut size={15} /> Logout</button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
         {banner}
